@@ -36,5 +36,20 @@ class ProductController
        
     }
 
-   
+    /**
+     * Permet de récupérer les informations d'un produit 
+     * @Route("/{id}", name="api_product_item_get", format="json", methods={"GET"})
+     * 
+     */
+    public function item(Product $product, SerializerInterface $serializer)
+    {   
+     
+        return new JsonResponse(
+            $serializer->serialize($product, 'json'),
+            Response::HTTP_OK,
+            [],
+            true
+        ); 
+        
+    }
 }
