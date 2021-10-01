@@ -2,11 +2,13 @@
 
 namespace App\Entity\API;
 
-use App\Repository\API\APICustomerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Repository\API\APICustomerRepository;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=APICustomerRepository::class)
+ * 
  */
 class APICustomer
 {
@@ -14,41 +16,49 @@ class APICustomer
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups("get")
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Groups("get")
      */
     private $lastname;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups("get")
      */
     private $firstname;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups("get")
      */
     private $address;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups("get")
      */
     private $civility;
 
     /**
      * @ORM\Column(type="string", length=10, nullable=true)
+     * @Groups("get")
      */
     private $phone;
 
     /**
      * @ORM\Column(type="datetime_immutable")
+     * @Groups("get")
      */
     private $createdAt;
 
     /**
      * @ORM\Column(type="datetime_immutable", nullable=true)
+     * @Groups("get")
      */
     private $updatedAt;
 
