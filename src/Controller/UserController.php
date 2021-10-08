@@ -40,12 +40,19 @@ class UserController
         //On autorise l'utilisateur 
         if($aPIUser == $this->security->getUser())
         {
-            return new JsonResponse(
+
+            $response =  new JsonResponse(
                 $serializer->serialize($aPIUser->getCustomers(), 'json', ['groups' => 'get']),
                 Response::HTTP_OK,
                 [],
                 true
             );
+
+            $response->setPublic();
+            $response->setMaxAge(3600);
+
+            return $response;
+
         }
         //On envoie un message d'erreur car l'utilisateur ne l'API n'est pas le même utilisateur que l'utilisateur authentifié
         return new JsonResponse([
@@ -70,24 +77,40 @@ class UserController
 
         $customer = $customerRepository->findOneBy(['id' => $customerId, 'apiUser' => $user]);
 
-        if($customer)
+        //On autorise l'utilisateur 
+        if($user == $this->security->getUser())
         {
-            return new JsonResponse(
-                $serializer->serialize($customer, 'json', ['groups' => 'get']),
-                Response::HTTP_OK,
-                [],
-                true
-            ); 
-        }
-        else {
+
+            if($customer)
+            {
+                $response = new JsonResponse(
+                    $serializer->serialize($customer, 'json', ['groups' => 'get']),
+                    Response::HTTP_OK,
+                    [],
+                    true
+                ); 
+    
+                $response->setPublic();
+                $response->setMaxAge(3600);
+    
+                return $response;
+            }
+
             return new JsonResponse(
                 ['message' => 'Customer not exist.'],
                 Response::HTTP_OK,
                 [],
                 false
             ); 
-        }
 
+           
+
+        }
+        //On envoie un message d'erreur car l'utilisateur ne l'API n'est pas le même utilisateur que l'utilisateur authentifié
+        return new JsonResponse([
+            'type'      => "forbidden",
+            'message'   => "You are not allowed to access to this ressource."
+        ]);
      
         
         
@@ -98,24 +121,39 @@ class UserController
      * @Route("/{id}/customers", name="api_user_customers_post", format="json", methods={"POST"})
      * @return void
      */
-    public function postCustomer(
+    public function postCustomer(APIUser $user, 
         Request $request, 
         SerializerInterface $serializer, 
         EntityManagerInterface $entityManager)
     {
-        $post = $serializer->deserialize($request->getContent(), APICustomer::class, 'json');
-        $post->setCreatedAt(new DateTimeImmutable());
-        $post->setApiUser($this->security->getUser());
-        $entityManager->persist($post);
-        $entityManager->flush();
         
 
-        return new JsonResponse(
-            $serializer->serialize($post, 'json', ['groups' => 'get'])
-            , Response::HTTP_CREATED, 
-            [],
-             true
-        );
+         //On autorise l'utilisateur 
+         if($user == $this->security->getUser())
+         {
+ 
+            $post = $serializer->deserialize($request->getContent(), APICustomer::class, 'json');
+            $post->setCreatedAt(new DateTimeImmutable());
+            $post->setApiUser($this->security->getUser());
+            $entityManager->persist($post);
+            $entityManager->flush();
+            
+    
+            return new JsonResponse(
+                $serializer->serialize($post, 'json', ['groups' => 'get'])
+                , Response::HTTP_CREATED, 
+                [],
+                 true
+            );
+ 
+            
+ 
+         }
+         //On envoie un message d'erreur car l'utilisateur ne l'API n'est pas le même utilisateur que l'utilisateur authentifié
+         return new JsonResponse([
+             'type'      => "forbidden",
+             'message'   => "You are not allowed to access to this ressource."
+         ]);
     }
 
     /**
@@ -131,25 +169,39 @@ class UserController
 
         $customer = $entityManager->getRepository(APICustomer::class)->findOneBy(['id' => $customerId, 'apiUser' => $user]);
 
-        if($customer)
-        {
-            $entityManager->remove($customer);
-            $entityManager->flush();
 
+
+          //On autorise l'utilisateur 
+          if($user == $this->security->getUser())
+          {
+  
+            if($customer)
+            {
+                $entityManager->remove($customer);
+                $entityManager->flush();
+    
+                return new JsonResponse(
+                    ['message' => 'User deleted.'],
+                    Response::HTTP_OK,
+                    [],
+                    false
+                );
+            }
+    
             return new JsonResponse(
-                ['message' => 'User deleted.'],
+                ['message' => 'Customer unknown.'],
                 Response::HTTP_OK,
                 [],
                 false
             );
-        }
-
-        return new JsonResponse(
-            ['message' => 'Customer unknown.'],
-            Response::HTTP_OK,
-            [],
-            false
-        );
+             
+  
+          }
+          //On envoie un message d'erreur car l'utilisateur ne l'API n'est pas le même utilisateur que l'utilisateur authentifié
+          return new JsonResponse([
+              'type'      => "forbidden",
+              'message'   => "You are not allowed to access to this ressource."
+          ]);
      
          
         
