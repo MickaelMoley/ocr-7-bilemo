@@ -2,12 +2,13 @@
 
 namespace App\Entity\API;
 
-use App\Repository\API\APIUserRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use App\Repository\API\APIUserRepository;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=APIUserRepository::class)
@@ -28,6 +29,7 @@ class APIUser implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true, unique=true)
+     * @Groups("get")
      */
     private $username;
 
@@ -53,6 +55,7 @@ class APIUser implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
+     * 
      */
     private $enabled;
 
@@ -234,5 +237,11 @@ class APIUser implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+    public function setUsername($username)
+    {
+        $this->username = $this->name;
+
+        return $this;
     }
 }
