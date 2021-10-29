@@ -15,6 +15,9 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security as OASecurity;
+use OpenApi\Annotations as OA;
 
 /**
  * @Route("/users")
@@ -31,6 +34,16 @@ class UserController
     /**
      * Permet de récupérer la liste des utilisateurs d'un client
      * @Route("/{id}/customers/",name="api_user_customers_collection_get", format="json", methods={"GET"})
+     * @OA\Response(
+     *     response=200,
+     *     description="Returns the list of customer of an user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=APICustomer::class))
+     *     )
+     * )
+     * @OA\Tag(name="Customers")
+     * @OASecurity(name="Bearer")
      * @return JsonResponse
      */
     public function collectionCustomer(
@@ -68,7 +81,16 @@ class UserController
     /**
      * Permet de récupérer les informations d'un client
      * @Route("/{id}/customers/{idCustomer}", name="api_user_customers_item_get", format="json", methods={"GET"})
-     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Returns the list of customer of an user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=APICustomer::class))
+     *     )
+     * )
+     * @OA\Tag(name="Customers")
+     * @OASecurity(name="Bearer")
      */
     public function itemCustomer(APIUser $user, APICustomerRepository $customerRepository, SerializerInterface $serializer, Request $request)
     {   
@@ -119,6 +141,16 @@ class UserController
     /**
      * Permet de créer un client pour un utilisateur
      * @Route("/{id}/customers", name="api_user_customers_post", format="json", methods={"POST"})
+     * @OA\Response(
+     *     response=200,
+     *     description="Returns the list of customer of an user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=APICustomer::class))
+     *     )
+     * )
+     * @OA\Tag(name="Customers")
+     * @OASecurity(name="Bearer")
      * @return void
      */
     public function postCustomer(APIUser $user, 
@@ -159,7 +191,16 @@ class UserController
     /**
      * Permet de supprimer un client d'un utilisateur
      * @Route("/{id}/customers/{idCustomer}", name="api_user_customers_item_delete", format="json", methods={"DELETE"})
-     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Returns the list of customer of an user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=APICustomer::class))
+     *     )
+     * )
+     * @OA\Tag(name="Customers")
+     * @OASecurity(name="Bearer")
      */
     public function itemDeleteCustomer(APIUser $user, SerializerInterface $serializer, EntityManagerInterface $entityManager,
         Request $request)

@@ -5,9 +5,11 @@ namespace App\Entity\API;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\API\APICustomerRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
+use OpenApi\Annotations as OA;
 
 /**
  * @ORM\Entity(repositoryClass=APICustomerRepository::class)
+ * @OA\Schema()
  * 
  */
 class APICustomer

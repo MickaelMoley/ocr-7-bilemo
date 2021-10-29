@@ -9,9 +9,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use OpenApi\Annotations as OA;
 
 /**
  * @ORM\Entity(repositoryClass=APIUserRepository::class)
+ * @OA\Schema()
  */
 class APIUser implements UserInterface, PasswordAuthenticatedUserInterface
 {
@@ -66,6 +68,7 @@ class APIUser implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @ORM\Column(type="json")
+     * @OA\Property(type="array", @OA\Items(type="string"))
      */
     private $roles = [];
 
