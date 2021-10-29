@@ -167,7 +167,8 @@ class UserController
     public function postCustomer(APIUser $user, 
         Request $request, 
         SerializerInterface $serializer, 
-        EntityManagerInterface $entityManager)
+        EntityManagerInterface $entityManager,
+        UrlGeneratorInterface $urlGeneratorInterface)
     {
         
 
@@ -181,9 +182,12 @@ class UserController
             $entityManager->persist($post);
             $entityManager->flush();
             
-    
+            //On lui passe l'url pour pouvoir générer les liens pour notre 
+            $builder = $this->getBuilder($urlGeneratorInterface);
+
+
             return new JsonResponse(
-                $serializer->serialize($post, 'json', ['groups' => 'get'])
+              $builder->serialize($post, 'json')
                 , Response::HTTP_CREATED, 
                 [],
                  true

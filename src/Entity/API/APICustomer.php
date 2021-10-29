@@ -32,6 +32,15 @@ use JMS\Serializer\Annotation\ExclusionPolicy;
  *          }   
  *      )
  * )
+  * @Hateoas\Relation(
+ *      "create",
+ *      href = @Hateoas\Route(
+ *          "api_user_customers_post",
+ *          parameters = { 
+ *              "id" = "expr(object.getApiUser().getId())", 
+ *          }   
+ *      )
+ * )
  */
 class APICustomer
 {
