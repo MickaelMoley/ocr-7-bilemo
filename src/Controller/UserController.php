@@ -98,7 +98,8 @@ class UserController
      * @OA\Tag(name="Customers")
      * @OASecurity(name="Bearer")
      */
-    public function itemCustomer(APIUser $user, APICustomerRepository $customerRepository, SerializerInterface $serializer, Request $request)
+    public function itemCustomer(APIUser $user, APICustomerRepository $customerRepository, SerializerInterface $serializer, Request $request,
+    UrlGeneratorInterface $urlGeneratorInterface)
     {   
 
         $customerId = $request->attributes->get('idCustomer');
@@ -111,8 +112,12 @@ class UserController
 
             if($customer)
             {
+
+            //On lui passe l'url pour pouvoir générer les liens pour notre 
+            $builder = $this->getBuilder($urlGeneratorInterface);
+
                 $response = new JsonResponse(
-                    $serializer->serialize($customer, 'json', ['groups' => 'get']),
+                   $builder->serialize($customer, 'json'),
                     Response::HTTP_OK,
                     [],
                     true

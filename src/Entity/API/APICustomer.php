@@ -14,7 +14,7 @@ use JMS\Serializer\Annotation\ExclusionPolicy;
  * @OA\Schema()
  * 
  * @Hateoas\Relation(
- *      "self",
+ *      "list",
  *      href = @Hateoas\Route(
  *          "api_user_customers_collection_get",
  *          parameters = { 
@@ -22,7 +22,16 @@ use JMS\Serializer\Annotation\ExclusionPolicy;
  *          }   
  *      )
  * )
- 
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "api_user_customers_item_get",
+ *          parameters = { 
+ *              "id" = "expr(object.getApiUser().getId())", 
+ *              "idCustomer" = "expr(object.getId())", 
+ *          }   
+ *      )
+ * )
  */
 class APICustomer
 {
