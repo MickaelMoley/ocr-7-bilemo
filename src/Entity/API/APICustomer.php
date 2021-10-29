@@ -6,11 +6,23 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Repository\API\APICustomerRepository;
 use Symfony\Component\Serializer\Annotation\Groups;
 use OpenApi\Annotations as OA;
+use Hateoas\Configuration\Annotation as Hateoas;
+use JMS\Serializer\Annotation\ExclusionPolicy;
 
 /**
  * @ORM\Entity(repositoryClass=APICustomerRepository::class)
  * @OA\Schema()
  * 
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "api_user_customers_collection_get",
+ *          parameters = { 
+ *              "id" = "expr(object.getApiUser().getId())", 
+ *          }   
+ *      )
+ * )
+ 
  */
 class APICustomer
 {

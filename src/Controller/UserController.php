@@ -5,19 +5,22 @@ namespace App\Controller;
 
 use DateTimeImmutable;
 use App\Entity\API\APIUser;
+use Hateoas\HateoasBuilder;
+use OpenApi\Annotations as OA;
 use App\Entity\API\APICustomer;
 use Doctrine\ORM\EntityManagerInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
 use App\Repository\API\APICustomerRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Security;
+use Hateoas\UrlGenerator\CallableUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Nelmio\ApiDocBundle\Annotation\Model;
 use Nelmio\ApiDocBundle\Annotation\Security as OASecurity;
-use OpenApi\Annotations as OA;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 /**
  * @Route("/users")
@@ -48,14 +51,17 @@ class UserController
      */
     public function collectionCustomer(
         APIUser $aPIUser,
-        SerializerInterface $serializer) : JsonResponse
+        SerializerInterface $serializer, UrlGeneratorInterface $urlGeneratorInterface) : JsonResponse
     {
         //On autorise l'utilisateur 
         if($aPIUser == $this->security->getUser())
         {
+            //On lui passe l'url pour pouvoir générer les liens pour notre 
+            $builder = $this->getBuilder($urlGeneratorInterface);
+                
 
             $response =  new JsonResponse(
-                $serializer->serialize($aPIUser->getCustomers(), 'json', ['groups' => 'get']),
+                $builder->serialize($aPIUser->getCustomers(), 'json'),
                 Response::HTTP_OK,
                 [],
                 true
@@ -246,5 +252,23 @@ class UserController
      
          
         
+    }
+
+
+    /**
+     * Fonction permettant de construire la fonction permettant de générer les liens découvrable pour API
+     *
+     * @param UrlGeneratorInterface $urlGeneratorInterface
+     */
+    private function getBuilder(UrlGeneratorInterface $urlGeneratorInterface)
+    {
+        return HateoasBuilder::create()
+        ->setUrlGenerator(
+            null,
+            new CallableUrlGenerator(function ($route, array $parameters, $absolute) use ($urlGeneratorInterface) {
+                return $urlGeneratorInterface->generate($route, $parameters, $absolute);
+            })
+        )
+        ->build();
     }
 }
