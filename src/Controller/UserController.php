@@ -5,15 +5,21 @@ namespace App\Controller;
 
 use DateTimeImmutable;
 use App\Entity\API\APIUser;
+use Hateoas\HateoasBuilder;
+use OpenApi\Annotations as OA;
 use App\Entity\API\APICustomer;
 use Doctrine\ORM\EntityManagerInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
 use App\Repository\API\APICustomerRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Security;
+use Hateoas\UrlGenerator\CallableUrlGenerator;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
+use Nelmio\ApiDocBundle\Annotation\Security as OASecurity;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 
 /**
@@ -31,18 +37,31 @@ class UserController
     /**
      * Permet de récupérer la liste des utilisateurs d'un client
      * @Route("/{id}/customers/",name="api_user_customers_collection_get", format="json", methods={"GET"})
+     * @OA\Response(
+     *     response=200,
+     *     description="Returns the list of customer of an user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=APICustomer::class))
+     *     )
+     * )
+     * @OA\Tag(name="Customers")
+     * @OASecurity(name="Bearer")
      * @return JsonResponse
      */
     public function collectionCustomer(
         APIUser $aPIUser,
-        SerializerInterface $serializer) : JsonResponse
+        SerializerInterface $serializer, UrlGeneratorInterface $urlGeneratorInterface) : JsonResponse
     {
         //On autorise l'utilisateur 
         if($aPIUser == $this->security->getUser())
         {
+            //On lui passe l'url pour pouvoir générer les liens pour notre 
+            $builder = $this->getBuilder($urlGeneratorInterface);
+                
 
             $response =  new JsonResponse(
-                $serializer->serialize($aPIUser->getCustomers(), 'json', ['groups' => 'get']),
+                $builder->serialize($aPIUser->getCustomers(), 'json'),
                 Response::HTTP_OK,
                 [],
                 true
@@ -68,9 +87,19 @@ class UserController
     /**
      * Permet de récupérer les informations d'un client
      * @Route("/{id}/customers/{idCustomer}", name="api_user_customers_item_get", format="json", methods={"GET"})
-     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Returns the list of customer of an user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=APICustomer::class))
+     *     )
+     * )
+     * @OA\Tag(name="Customers")
+     * @OASecurity(name="Bearer")
      */
-    public function itemCustomer(APIUser $user, APICustomerRepository $customerRepository, SerializerInterface $serializer, Request $request)
+    public function itemCustomer(APIUser $user, APICustomerRepository $customerRepository, SerializerInterface $serializer, Request $request,
+    UrlGeneratorInterface $urlGeneratorInterface)
     {   
 
         $customerId = $request->attributes->get('idCustomer');
@@ -83,8 +112,12 @@ class UserController
 
             if($customer)
             {
+
+            //On lui passe l'url pour pouvoir générer les liens pour notre 
+            $builder = $this->getBuilder($urlGeneratorInterface);
+
                 $response = new JsonResponse(
-                    $serializer->serialize($customer, 'json', ['groups' => 'get']),
+                   $builder->serialize($customer, 'json'),
                     Response::HTTP_OK,
                     [],
                     true
@@ -119,12 +152,23 @@ class UserController
     /**
      * Permet de créer un client pour un utilisateur
      * @Route("/{id}/customers", name="api_user_customers_post", format="json", methods={"POST"})
+     * @OA\Response(
+     *     response=200,
+     *     description="Returns the list of customer of an user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=APICustomer::class))
+     *     )
+     * )
+     * @OA\Tag(name="Customers")
+     * @OASecurity(name="Bearer")
      * @return void
      */
     public function postCustomer(APIUser $user, 
         Request $request, 
         SerializerInterface $serializer, 
-        EntityManagerInterface $entityManager)
+        EntityManagerInterface $entityManager,
+        UrlGeneratorInterface $urlGeneratorInterface)
     {
         
 
@@ -138,9 +182,12 @@ class UserController
             $entityManager->persist($post);
             $entityManager->flush();
             
-    
+            //On lui passe l'url pour pouvoir générer les liens pour notre 
+            $builder = $this->getBuilder($urlGeneratorInterface);
+
+
             return new JsonResponse(
-                $serializer->serialize($post, 'json', ['groups' => 'get'])
+              $builder->serialize($post, 'json')
                 , Response::HTTP_CREATED, 
                 [],
                  true
@@ -159,7 +206,16 @@ class UserController
     /**
      * Permet de supprimer un client d'un utilisateur
      * @Route("/{id}/customers/{idCustomer}", name="api_user_customers_item_delete", format="json", methods={"DELETE"})
-     * 
+     * @OA\Response(
+     *     response=200,
+     *     description="Returns the list of customer of an user",
+     *     @OA\JsonContent(
+     *        type="array",
+     *        @OA\Items(ref=@Model(type=APICustomer::class))
+     *     )
+     * )
+     * @OA\Tag(name="Customers")
+     * @OASecurity(name="Bearer")
      */
     public function itemDeleteCustomer(APIUser $user, SerializerInterface $serializer, EntityManagerInterface $entityManager,
         Request $request)
@@ -205,5 +261,23 @@ class UserController
      
          
         
+    }
+
+
+    /**
+     * Fonction permettant de construire la fonction permettant de générer les liens découvrable pour API
+     *
+     * @param UrlGeneratorInterface $urlGeneratorInterface
+     */
+    private function getBuilder(UrlGeneratorInterface $urlGeneratorInterface)
+    {
+        return HateoasBuilder::create()
+        ->setUrlGenerator(
+            null,
+            new CallableUrlGenerator(function ($route, array $parameters, $absolute) use ($urlGeneratorInterface) {
+                return $urlGeneratorInterface->generate($route, $parameters, $absolute);
+            })
+        )
+        ->build();
     }
 }
