@@ -175,7 +175,39 @@ class CustomerController
 		);
     }
 
+	/**
+	 * Permet de supprimer un client d'un utilisateur
+	 * @Route("/{id}", name="api_customers_item_delete", format="json", methods={"DELETE"})
+	 * @OA\Response(
+	 *     response=200,
+	 *     description="Returns the list of customer of an user",
+	 *     @OA\JsonContent(
+	 *        type="array",
+	 *        @OA\Items(ref=@Model(type=APICustomer::class))
+	 *     )
+	 * )
+	 * @OA\Tag(name="Customers")
+	 * @OASecurity(name="Bearer")
+	 */
+	public function itemDeleteCustomer(
+		APICustomer $customer,
+		SerializerInterface $serializer,
+		EntityManagerInterface $entityManager,
+		Request $request)
+	{
 
+		$entityManager->remove($customer);
+		$entityManager->flush();
+
+		return new JsonResponse(
+			['message' => 'User deleted.'],
+			Response::HTTP_OK,
+			[],
+			false
+		);
+
+
+	}
 
 
     /**
