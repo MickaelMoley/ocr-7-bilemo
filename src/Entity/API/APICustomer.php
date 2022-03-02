@@ -5,10 +5,9 @@ namespace App\Entity\API;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\API\APICustomerRepository;
 use JMS\Serializer\Annotation as Serializer;
-use Symfony\Component\Serializer\Annotation\Groups;
 use OpenApi\Annotations as OA;
 use Hateoas\Configuration\Annotation as Hateoas;
-use JMS\Serializer\Annotation\ExclusionPolicy;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=APICustomerRepository::class)
@@ -52,6 +51,7 @@ class APICustomer
      * @ORM\Column(type="string", length=255)
      * @Serializer\Groups({"get"})
 	 * @Serializer\Expose()
+	 * @Assert\NotBlank()
      */
     private $lastname;
 
