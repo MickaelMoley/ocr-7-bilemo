@@ -4,41 +4,35 @@ namespace App\Entity\API;
 
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\API\APICustomerRepository;
-use Symfony\Component\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation as Serializer;
 use OpenApi\Annotations as OA;
 use Hateoas\Configuration\Annotation as Hateoas;
-use JMS\Serializer\Annotation\ExclusionPolicy;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=APICustomerRepository::class)
+ * @Serializer\ExclusionPolicy("all")
  * @OA\Schema()
  * 
  * @Hateoas\Relation(
  *      "list",
  *      href = @Hateoas\Route(
- *          "api_user_customers_collection_get",
- *          parameters = { 
- *              "id" = "expr(object.getApiUser().getId())", 
- *          }   
+ *          "api_customers_collection_get"
  *      )
  * )
  * @Hateoas\Relation(
  *      "self",
  *      href = @Hateoas\Route(
- *          "api_user_customers_item_get",
+ *          "api_customers_item_get",
  *          parameters = { 
- *              "id" = "expr(object.getApiUser().getId())", 
- *              "idCustomer" = "expr(object.getId())", 
+ *              "id" = "expr(object.getId())",
  *          }   
  *      )
  * )
   * @Hateoas\Relation(
  *      "create",
  *      href = @Hateoas\Route(
- *          "api_user_customers_post",
- *          parameters = { 
- *              "id" = "expr(object.getApiUser().getId())", 
- *          }   
+ *          "api_customers_post"
  *      )
  * )
  */
@@ -48,49 +42,58 @@ class APICustomer
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups("get")
+	 * @Serializer\Groups({"get"})
+	 * @Serializer\Expose()
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups("get")
+     * @Serializer\Groups({"get"})
+	 * @Serializer\Expose()
+	 * @Assert\NotBlank()
      */
     private $lastname;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups("get")
+	 * @Serializer\Groups({"get"})
+	 * @Serializer\Expose()
      */
     private $firstname;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups("get")
+	 * @Serializer\Groups({"get"})
+	 * @Serializer\Expose()
      */
     private $address;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups("get")
+	 * @Serializer\Groups({"get"})
+	 * @Serializer\Expose()
      */
     private $civility;
 
     /**
      * @ORM\Column(type="string", length=10, nullable=true)
-     * @Groups("get")
+	 * @Serializer\Groups({"get"})
+	 * @Serializer\Expose()
      */
     private $phone;
 
     /**
      * @ORM\Column(type="datetime_immutable")
-     * @Groups("get")
+	 * @Serializer\Groups({"get"})
+	 * @Serializer\Expose()
      */
     private $createdAt;
 
     /**
      * @ORM\Column(type="datetime_immutable", nullable=true)
-     * @Groups("get")
+	 * @Serializer\Groups({"get"})
+	 * @Serializer\Expose()
      */
     private $updatedAt;
 
