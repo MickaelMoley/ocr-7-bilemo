@@ -1,4 +1,8 @@
 
+## Projet OCR - Bilemo
+par Mickaël MOLEY
+
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/984280855ab04c708e381d86989d8c36)](https://www.codacy.com/gh/MickaelMoley/ocr-7-bilemo/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=MickaelMoley/ocr-7-bilemo&amp;utm_campaign=Badge_Grade)
 
 ## Configuration de JWT
 
@@ -34,3 +38,42 @@ Il suffit d'entrer cette commande pour pouvoir les générer.
 
     php bin/console lexik:jwt:generate-keypair
  Si une configuration existe déjà, vous devez peut-être forcer la nouvelle configuration en ajoutant `--overwrite` après la commande. Cela aura pour effet d'écraser les anciennes clés par les nouvelles.
+
+# Installation du projet
+
+## Cloner le projet
+Lancer cette commande depuis un terminal afin d'installer les sources du projet en local :
+
+
+    git@github.com:MickaelMoley/ocr-7-bilemo.git
+
+## Installer les dépendances du projet
+Lancer la commande suivante pour installer les dépendances du projet :
+
+    composer install
+
+**Voir la configuration de JWT avant de tester l'API.  Vous ne pourrez pas effectuer des requêtes si les clés n'ont pas été générées.**
+
+## Jeu de données
+Le projet contient des données de test.
+Pour démarrer le projet avec un jeu de donnée de test, lancer simplement cette commande :
+
+    bin/console doctrine:fixtures:load
+
+
+## Découvert de l'API
+Pour pouvoir tester l'API, vous devez accéder à la route suivante :
+
+Route : localhost/**api/doc**
+
+Pour commencer, lancer le serveur via la commande **symfony**
+
+    symfony serve
+ou
+en exécutant la commande suivante :
+
+    cd public && php -S localhost:8000
+
+Enfin, accéder à l'URL suivante : https://localhost:8000/index.php/api/doc
+Vous pourrez tester l'API via la documentation.
+
