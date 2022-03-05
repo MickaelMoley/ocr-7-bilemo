@@ -200,8 +200,8 @@ class CustomerController
 		$entityManager->flush();
 
 		return new JsonResponse(
-			['message' => 'User deleted.'],
-			Response::HTTP_OK,
+			null,
+			Response::HTTP_NO_CONTENT,
 			[],
 			false
 		);
