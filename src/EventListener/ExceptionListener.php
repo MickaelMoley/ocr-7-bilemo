@@ -4,6 +4,7 @@ namespace App\EventListener;
 
 use App\Factory\NormalizerFactory;
 use App\Http\ApiResponse;
+use JMS\Serializer\Exception\ValidationFailedException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -51,7 +52,18 @@ class ExceptionListener
 	private function createApiResponse(\Throwable $exception): ApiResponse
 	{
 		$normalizer = $this->normalizerFactory->getNormalizer($exception);
-		$statusCode = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : Response::HTTP_INTERNAL_SERVER_ERROR;
+		$statusCode = Response::HTTP_BAD_REQUEST;
+
+
+		if($exception instanceof  HttpExceptionInterface)
+		{
+			$statusCode = $exception->getStatusCode();
+		}
+		if($exception instanceof ValidationFailedException)
+		{
+			$statusCode = Response::HTTP_BAD_REQUEST;
+		}
+
 
 		try {
 			$errors = $normalizer ? $normalizer->normalize($exception) : [];
