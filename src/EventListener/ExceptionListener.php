@@ -5,6 +5,7 @@ namespace App\EventListener;
 use App\Factory\NormalizerFactory;
 use App\Http\ApiResponse;
 use JMS\Serializer\Exception\ValidationFailedException;
+use Pagerfanta\Exception\OutOfRangeCurrentPageException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -65,8 +66,18 @@ class ExceptionListener
 		}
 
 
+
 		try {
 			$errors = $normalizer ? $normalizer->normalize($exception) : [];
+
+			if($exception->getPrevious() instanceof OutOfRangeCurrentPageException){
+				$errors = [];
+				$errors['message'] = $exception->getPrevious()->getMessage();
+			}
+
+			if($exception instanceof \LogicException){
+				$errors = [];
+			}
 
 		} catch (\Exception $e) {
 			$errors = [];

@@ -4,12 +4,15 @@
 namespace App\Controller;
 
 use App\Entity\Product;
+use App\Representation\Product as Products;
 use App\Repository\ProductRepository;
+use JMS\Serializer\SerializationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use Nelmio\ApiDocBundle\Annotation\Security;
@@ -32,20 +35,54 @@ class ProductController
      *        @OA\Items(ref=@Model(type=Product::class))
      *     )
      * )
+	 *  @OA\Parameter(name="page",
+	 *    in="query", description="Specify the page you want to browse",
+	 *    @OA\Schema(type="int")
+	 *  ),
+	 *  @OA\Parameter(name="order",
+	 *    in="query", description="Specify sort order page 'asc' or 'desc'",
+	 *    @OA\Schema(type="string")
+	 *  ),
+	 *  @OA\Parameter(name="limit",
+	 *    in="query", description="Specify the number of items you want to display per page",
+	 *    @OA\Schema(type="int")
+	 *  )
+	 * @OA\Response(
+	 *     response = 404,
+	 *     description = "Page Not Found"
+	 * )
      * @OA\Tag(name="Products")
      * @Security(name="Bearer")
      * @return JsonResponse
      */
-    public function collection(ProductRepository $productRepository, SerializerInterface $serializer) : JsonResponse
+    public function collection(
+		ProductRepository $productRepository,
+		SerializerInterface $serializer,
+		Request $request, UrlGeneratorInterface $urlGenerator) : JsonResponse
     {
+		$page = $request->query->get('page', 1);
+		$order = $request->query->get('order', 'asc');
+		$limit = $request->query->get('limit', 5);
+
+		$collection = $productRepository->getListProducts(
+			(int) $page,
+			(int) $limit,
+			$order);
 
 
-        return new JsonResponse(
-            $serializer->serialize($productRepository->findAll(), 'json'),
-            Response::HTTP_OK,
-            [],
-            true
-        );  
+		$response =  new JsonResponse(
+			$serializer->serialize(
+				new Products($collection, $urlGenerator),
+				'json'),
+			Response::HTTP_OK,
+			[],
+			true
+		);
+
+		$response->setPublic();
+		$response->setMaxAge(3600);
+
+		return $response;
        
     }
 
