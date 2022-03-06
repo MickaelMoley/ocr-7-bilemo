@@ -19,6 +19,7 @@ use Nelmio\ApiDocBundle\Annotation\Model;
 use App\Repository\API\APICustomerRepository;
 use Pagerfanta\Doctrine\ORM\QueryAdapter;
 use Pagerfanta\Pagerfanta;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Security;
 use Hateoas\UrlGenerator\CallableUrlGenerator;
@@ -33,20 +34,21 @@ use Symfony\Component\Validator\Exception\ValidatorException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
- * @Route("/customers")
+ * @Route("/users")
  */
-class CustomerController
+class UserController
 {
-    private $security; 
+    private $security;
 
-    public function __construct(Security $security)
+	public function __construct(Security $security)
     {
         $this->security = $security;
     }
 
     /**
      * Permet de récupérer la liste des utilisateurs d'un client
-     * @Route("/",name="api_customers_collection_get", format="json", methods={"GET"})
+     * @Route("/{id}/customers/list",name="api_user_customers_collection_get", format="json", methods={"GET"})
+	 *
      * @OA\Response(
      *     response=200,
      *     description="Returns the list of customer",
@@ -71,13 +73,19 @@ class CustomerController
 	 *     response = 404,
 	 *     description = "Page Not Found"
 	 * )
+	 * @OA\Response(
+	 *     response=405,
+	 *     description="Method HTTP not allowed"
+	 * )
      * @OA\Tag(name="Customers")
      * @OASecurity(name="Bearer")
      * @return JsonResponse
      */
-    public function collectionCustomer(APICustomerRepository $APICustomerRepository,
+    public function collectionCustomer(APIUser $APIUser, APICustomerRepository $APICustomerRepository,
         SerializerInterface $serializer, UrlGeneratorInterface $urlGeneratorInterface, Request $request) : JsonResponse
     {
+
+
 		$page = $request->query->get('page', 1);
 		$order = $request->query->get('order', 'asc');
 		$limit = $request->query->get('limit', 5);
@@ -88,6 +96,9 @@ class CustomerController
 		$context = new SerializationContext();
 		$context->setGroups('get');
 
+
+
+
 		$collection = $APICustomerRepository->getListCustomers(
 			$this->security->getUser(),
 			(int) $page,
@@ -97,7 +108,7 @@ class CustomerController
 
 		$response =  new JsonResponse(
 			$builder->serialize(
-				new Customer($collection, $urlGeneratorInterface),
+				new Customer($collection, $urlGeneratorInterface, $APIUser),
 				'json'),
 			Response::HTTP_OK,
 			[],
@@ -116,7 +127,9 @@ class CustomerController
 
     /**
      * Permet de récupérer les informations d'un client
-     * @Route("/{id}", name="api_customers_item_get", format="json", methods={"GET"})
+     * @Route("/{id}/customers/show/{customerId}", name="api_user_customers_item_get", format="json", methods={"GET"})
+	 *
+	 * @ParamConverter("APIUser", class="App\Entity\API\APIUser")
      * @OA\Response(
      *     response=200,
      *     description="Returns an customer",
@@ -125,18 +138,50 @@ class CustomerController
      *        @OA\Items(ref=@Model(type=APICustomer::class))
      *     )
      * )
+	 * @OA\Response(
+	 *     response=403,
+	 *     description="You cannot access to this ressource"
+	 * )
+	 * @OA\Response(
+	 *     response=404,
+	 *     description="Resource not found"
+	 * )
+	 * @OA\Response(
+	 *     response=405,
+	 *     description="Method HTTP not allowed"
+	 * )
      * @OA\Tag(name="Customers")
      * @OASecurity(name="Bearer")
      */
-    public function itemCustomer(APICustomer $APICustomer, APICustomerRepository $customerRepository, SerializerInterface $serializer, Request $request,
+    public function itemCustomer(APIUser $APIUser, APICustomerRepository $customerRepository, SerializerInterface $serializer, Request $request,
     UrlGeneratorInterface $urlGeneratorInterface)
     {
+		//Check If user from param converter is same as user auth with token
+		if($this->security->getUser() !== $APIUser)
+		{
+			return new JsonResponse([
+				"message" => "You cannot access to this ressource.",
+				'status' => Response::HTTP_FORBIDDEN
+			], Response::HTTP_FORBIDDEN);
+		}
+
+		$customerId = $request->get('customerId');
+		$customer = $customerRepository->findOneBy(['id' => $customerId, 'apiUser' => $APIUser]);
+
+		if (!$customer)
+		{
+			return new JsonResponse([
+				'message' => "Resource not found.",
+				'status' => Response::HTTP_NOT_FOUND
+			], Response::HTTP_NOT_FOUND);
+		}
+
 
 		//On lui passe l'url pour pouvoir générer les liens pour notre
 		$builder = $this->getBuilder($urlGeneratorInterface);
 
 		$response = new JsonResponse(
-			$builder->serialize($APICustomer, 'json'),
+			$builder->serialize($customer, 'json'),
 			Response::HTTP_OK,
 			[],
 			true
@@ -153,7 +198,7 @@ class CustomerController
 
     /**
      * Permet de créer un client pour un utilisateur
-     * @Route("", name="api_customers_post", format="json", methods={"POST"})
+     * @Route("/{id}/customers/create", name="api_user_customers_post", format="json", methods={"POST"})
      * @OA\Response(
      *     response=200,
      *     description="Create an customer",
@@ -162,11 +207,33 @@ class CustomerController
      *        @OA\Items(ref=@Model(type=APICustomer::class))
      *     )
      * )
+	 *
+	 * @OA\Response(
+	 *     response=201,
+	 *     description="Customer created",
+	 *     @OA\JsonContent(
+	 *        type="array",
+	 *        @OA\Items(ref=@Model(type=APICustomer::class))
+	 *     )
+	 * )
+	 * @OA\Response(
+	 *     response=400,
+	 *     description="Validation failed"
+	 * )
+	 * @OA\Response(
+	 *     response=403,
+	 *     description="You cannot access to this ressource"
+	 * )
+	 * @OA\Response(
+	 *     response=405,
+	 *     description="Method HTTP not allowed"
+	 * )
      * @OA\Tag(name="Customers")
      * @OASecurity(name="Bearer")
      * @return JsonResponse
 	 */
     public function postCustomer(
+		APIUser $APIUser,
         Request $request,
         SerializerInterface $serializer,
         EntityManagerInterface $entityManager,
@@ -174,12 +241,21 @@ class CustomerController
 		ValidatorInterface $validator)
     {
 
+		//Check If user from param converter is same as user auth with token
+		if($this->security->getUser() !== $APIUser)
+		{
+			return new JsonResponse([
+				"message" => "You cannot access to this ressource.",
+				'status' => Response::HTTP_FORBIDDEN
+			], Response::HTTP_FORBIDDEN);
+		}
 
-		$post = $serializer->deserialize($request->getContent(), APICustomer::class, 'json');
-		$post->setCreatedAt(new DateTimeImmutable());
-		$post->setApiUser($this->security->getUser());
+		/** @var APICustomer $customer */
+		$customer = $serializer->deserialize($request->getContent(), APICustomer::class, 'json');
+		$customer->setCreatedAt(new DateTimeImmutable());
+		$customer->setApiUser($this->security->getUser());
 
-		$errors = $validator->validate($post);
+		$errors = $validator->validate($customer);
 
 		//Si erreur de validation alors on lance une exception
 		if(count($errors))
@@ -188,7 +264,7 @@ class CustomerController
 		}
 
 
-		$entityManager->persist($post);
+		$entityManager->persist($customer);
 		$entityManager->flush();
 
 		//On lui passe l'url pour pouvoir générer les liens pour notre
@@ -198,7 +274,7 @@ class CustomerController
 		$context->setGroups('get');
 
 		return new JsonResponse(
-			$builder->serialize($post, 'json', $context)
+			$builder->serialize($customer, 'json', $context)
 			, Response::HTTP_CREATED,
 			[],
 			true
@@ -207,7 +283,7 @@ class CustomerController
 
 	/**
 	 * Permet de supprimer un client d'un utilisateur
-	 * @Route("/{id}", name="api_customers_item_delete", format="json", methods={"DELETE"})
+	 * @Route("/{id}/customers/delete/{customerId}", name="api_user_customers_item_delete", format="json", methods={"DELETE"})
 	 * @OA\Response(
 	 *     response=200,
 	 *     description="Returns the list of customer of an user",
@@ -216,15 +292,51 @@ class CustomerController
 	 *        @OA\Items(ref=@Model(type=APICustomer::class))
 	 *     )
 	 * )
+	 * @OA\Response(
+	 *     response=204,
+	 *     description="No content"
+	 * )
+	 * @OA\Response(
+	 *     response=403,
+	 *     description="You cannot access to this ressource"
+	 * )
+	 * @OA\Response(
+	 *     response=404,
+	 *     description="Resource not found"
+	 * )
+	 * @OA\Response(
+	 *     response=405,
+	 *     description="Method HTTP not allowed"
+	 * )
 	 * @OA\Tag(name="Customers")
 	 * @OASecurity(name="Bearer")
 	 */
 	public function itemDeleteCustomer(
-		APICustomer $customer,
+		APIUser $APIUser,
+		APICustomerRepository $customerRepository,
 		SerializerInterface $serializer,
 		EntityManagerInterface $entityManager,
 		Request $request)
 	{
+		//Check If user from param converter is same as user auth with token
+		if($this->security->getUser() !== $APIUser)
+		{
+			return new JsonResponse([
+				"message" => "You cannot access to this ressource.",
+				'status' => Response::HTTP_FORBIDDEN
+			], Response::HTTP_FORBIDDEN);
+		}
+
+		$customerId = $request->get('customerId');
+		$customer = $customerRepository->findOneBy(['id' => $customerId, 'apiUser' => $APIUser]);
+
+		if (!$customer)
+		{
+			return new JsonResponse([
+				'message' => "Resource not found.",
+				'status' => Response::HTTP_NOT_FOUND
+			], Response::HTTP_NOT_FOUND);
+		}
 
 		$entityManager->remove($customer);
 		$entityManager->flush();

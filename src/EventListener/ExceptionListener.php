@@ -9,6 +9,7 @@ use Pagerfanta\Exception\OutOfRangeCurrentPageException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 
 class ExceptionListener
@@ -54,6 +55,7 @@ class ExceptionListener
 	{
 		$normalizer = $this->normalizerFactory->getNormalizer($exception);
 		$statusCode = Response::HTTP_BAD_REQUEST;
+		$message = null;
 
 
 		if($exception instanceof  HttpExceptionInterface)
@@ -81,9 +83,15 @@ class ExceptionListener
 
 		} catch (\Exception $e) {
 			$errors = [];
+
+			if($exception instanceof NotFoundHttpException)
+			{
+				$errors = [];
+				$message = "Resource not found";
+			}
+
 		} catch (ExceptionInterface $e) {
 		}
-
-		return new ApiResponse($exception->getMessage(), null, $errors, $statusCode);
+		return new ApiResponse(is_null($message) ? $exception->getMessage() : $message, null, $errors, $statusCode);
 	}
 }
