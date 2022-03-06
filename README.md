@@ -54,6 +54,27 @@ Lancer la commande suivante pour installer les dépendances du projet :
 
 **Voir la configuration de JWT avant de tester l'API.  Vous ne pourrez pas effectuer des requêtes si les clés n'ont pas été générées.**
 
+
+
+## Mise en place de la base de donnée
+Vous devez renseigner les identifiants de la base de donnée dans le fichier suivant : `.env`
+ex : `DATABASE_URL="mysql://root:password@127.0.0.1:3306/nom_de_la_db"`
+Enfin,
+Exécuter les commandes suivantes pour synchroniser votre base de donnée avec les entités du projet
+
+
+### Création de la base de donéne
+    php bin/console doctrine:database:create (si cela n'est pas déjà fait)
+###     Forcer la synchronisation de la base de donnée
+    php bin/console doctrine:schema:update --force
+
+## Jeu de données
+Le projet contient des données de test.
+Pour démarrer le projet avec un jeu de donnée de test, lancer simplement cette commande :
+
+    bin/console doctrine:fixtures:load
+
+
 ## Jeu de données
 Le projet contient des données de test.
 Pour démarrer le projet avec un jeu de donnée de test, lancer simplement cette commande :
