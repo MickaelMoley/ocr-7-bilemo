@@ -26,7 +26,7 @@ class ProductController
 
     /**
      * Permet de récupérer la liste de tous les produits
-     * @Route(name="api_product_collection_get", format="json", methods={"GET"})
+     * @Route("/list",name="api_product_collection_get", format="json", methods={"GET"})
      * @OA\Response(
      *     response=200,
      *     description="Returns the list of Bilemo products",
@@ -88,7 +88,7 @@ class ProductController
 
     /**
      * Permet de récupérer les informations d'un produit 
-     * @Route("/{id}", name="api_product_item_get", format="json", methods={"GET"})
+     * @Route("/show/{id}", name="api_product_item_get", format="json", methods={"GET"})
      * @OA\Response(
      *     response=200,
      *     description="Returns an Bilemo product",
