@@ -29,10 +29,19 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          }   
  *      )
  * )
-  * @Hateoas\Relation(
+ * @Hateoas\Relation(
  *      "create",
  *      href = @Hateoas\Route(
  *          "api_customers_post"
+ *      )
+ * )
+ * @Hateoas\Relation(
+ *      "delete",
+ *      href = @Hateoas\Route(
+ *          "api_customers_item_delete",
+ *      	parameters = {
+ *              "id" = "expr(object.getId())",
+ *          }
  *      )
  * )
  */

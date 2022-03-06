@@ -4,9 +4,12 @@
 namespace App\Controller;
 
 use App\Http\ApiResponse;
+use App\Representation\Customer;
 use DateTimeImmutable;
 use App\Entity\API\APIUser;
+use Doctrine\ORM\QueryBuilder;
 use Hateoas\HateoasBuilder;
+use Hateoas\Representation\Factory\PagerfantaFactory;
 use JMS\Serializer\Exception\ValidationFailedException;
 use JMS\Serializer\SerializationContext;
 use OpenApi\Annotations as OA;
@@ -14,6 +17,8 @@ use App\Entity\API\APICustomer;
 use Doctrine\ORM\EntityManagerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use App\Repository\API\APICustomerRepository;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Security;
 use Hateoas\UrlGenerator\CallableUrlGenerator;
@@ -50,25 +55,46 @@ class CustomerController
      *        @OA\Items(ref=@Model(type=APICustomer::class))
      *     )
      * )
+	 *  @OA\Parameter(name="page",
+	 *    in="query",
+	 *    @OA\Schema(type="int")
+	 *  ),
+	 *  @OA\Parameter(name="order",
+	 *    in="query",
+	 *    @OA\Schema(type="string")
+	 *  ),
+	 *  @OA\Parameter(name="limit",
+	 *    in="query",
+	 *    @OA\Schema(type="int")
+	 *  )
      * @OA\Tag(name="Customers")
      * @OASecurity(name="Bearer")
      * @return JsonResponse
      */
     public function collectionCustomer(APICustomerRepository $APICustomerRepository,
-        SerializerInterface $serializer, UrlGeneratorInterface $urlGeneratorInterface) : JsonResponse
+        SerializerInterface $serializer, UrlGeneratorInterface $urlGeneratorInterface, Request $request) : JsonResponse
     {
+		$page = $request->query->get('page', 1);
+		$order = $request->query->get('order', 'asc');
+		$limit = $request->query->get('limit', 5);
+
 		//On lui passe l'url pour pouvoir générer les liens pour notre
 		$builder = $this->getBuilder($urlGeneratorInterface);
 
 		$context = new SerializationContext();
 		$context->setGroups('get');
 
+		$collection = $APICustomerRepository->getListCustomers(
+			$this->security->getUser(),
+			(int) $page,
+			(int) $limit,
+			$order);
+
 
 		$response =  new JsonResponse(
 			$builder->serialize(
-				$APICustomerRepository->findBy(['apiUser' => $this->security->getUser()]),
-				'json',
-			$context),
+				new Customer($collection, $urlGeneratorInterface),
+				'json'),
 			Response::HTTP_OK,
 			[],
 			true
