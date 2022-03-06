@@ -4,9 +4,12 @@ namespace App\EventListener;
 
 use App\Factory\NormalizerFactory;
 use App\Http\ApiResponse;
+use JMS\Serializer\Exception\ValidationFailedException;
+use Pagerfanta\Exception\OutOfRangeCurrentPageException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 
 class ExceptionListener
@@ -51,16 +54,44 @@ class ExceptionListener
 	private function createApiResponse(\Throwable $exception): ApiResponse
 	{
 		$normalizer = $this->normalizerFactory->getNormalizer($exception);
-		$statusCode = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : Response::HTTP_INTERNAL_SERVER_ERROR;
+		$statusCode = Response::HTTP_BAD_REQUEST;
+		$message = null;
+
+
+		if($exception instanceof  HttpExceptionInterface)
+		{
+			$statusCode = $exception->getStatusCode();
+		}
+		if($exception instanceof ValidationFailedException)
+		{
+			$statusCode = Response::HTTP_BAD_REQUEST;
+		}
+
+
 
 		try {
 			$errors = $normalizer ? $normalizer->normalize($exception) : [];
 
+			if($exception->getPrevious() instanceof OutOfRangeCurrentPageException){
+				$errors = [];
+				$errors['message'] = $exception->getPrevious()->getMessage();
+			}
+
+			if($exception instanceof \LogicException){
+				$errors = [];
+			}
+
 		} catch (\Exception $e) {
 			$errors = [];
+
+			if($exception instanceof NotFoundHttpException)
+			{
+				$errors = [];
+				$message = "Resource not found";
+			}
+
 		} catch (ExceptionInterface $e) {
 		}
-
-		return new ApiResponse($exception->getMessage(), null, $errors, $statusCode);
+		return new ApiResponse(is_null($message) ? $exception->getMessage() : $message, null, $errors, $statusCode);
 	}
 }

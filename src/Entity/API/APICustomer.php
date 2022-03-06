@@ -13,26 +13,43 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass=APICustomerRepository::class)
  * @Serializer\ExclusionPolicy("all")
  * @OA\Schema()
- * 
+ *
  * @Hateoas\Relation(
  *      "list",
  *      href = @Hateoas\Route(
- *          "api_customers_collection_get"
+ *          "api_user_customers_collection_get",
+ *     		parameters = {
+ *              "id" = "expr(object.getApiUser().getId())"
+ *          }
  *      )
  * )
  * @Hateoas\Relation(
  *      "self",
  *      href = @Hateoas\Route(
- *          "api_customers_item_get",
- *          parameters = { 
- *              "id" = "expr(object.getId())",
- *          }   
+ *          "api_user_customers_item_get",
+ *          parameters = {
+ *              "id" = "expr(object.getApiUser().getId())",
+ *     			"customerId" = "expr(object.getId())"
+ *          }
  *      )
  * )
-  * @Hateoas\Relation(
+ * @Hateoas\Relation(
  *      "create",
  *      href = @Hateoas\Route(
- *          "api_customers_post"
+ *          "api_user_customers_post",
+ *      	parameters = {
+ *              "id" = "expr(object.getApiUser().getId())"
+ *          }
+ *      )
+ * )
+ * @Hateoas\Relation(
+ *      "delete",
+ *      href = @Hateoas\Route(
+ *          "api_user_customers_item_delete",
+ *      	parameters = {
+ *              "id" = "expr(object.getApiUser().getId())",
+ *     			"customerId" = "expr(object.getId())"
+ *          }
  *      )
  * )
  */

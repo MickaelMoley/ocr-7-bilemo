@@ -2,9 +2,13 @@
 
 namespace App\Repository;
 
+use App\Entity\API\APIUser;
 use App\Entity\Product;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
+use Pagerfanta\Doctrine\ORM\QueryAdapter;
+use Pagerfanta\Pagerfanta;
 
 /**
  * @method Product|null find($id, $lockMode = null, $lockVersion = null)
@@ -19,32 +23,41 @@ class ProductRepository extends ServiceEntityRepository
         parent::__construct($registry, Product::class);
     }
 
-    // /**
-    //  * @return Product[] Returns an array of Product objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('p.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
+	/**
+	 * Get customers of an user and paginate it
+	 * @param int $page
+	 * @param int $limit
+	 * @param string $order
+	 * @return Pagerfanta
+	 */
+	public function getListProducts(int $page = 1, int $limit = 5, string $order = 'ASC'): Pagerfanta
+	{
 
-    /*
-    public function findOneBySomeField($value): ?Product
-    {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
+		$queryBuilder = $this->createQueryBuilder('p')
+			->orderBy('p.id', $order)
+		;
+
+		return $this->paginate($queryBuilder, $page, $limit);
+	}
+
+	/**
+	 * Function paginate query
+	 * @param QueryBuilder $queryBuilder
+	 * @param $page
+	 * @param $limit
+	 * @return Pagerfanta
+	 */
+	protected function paginate(QueryBuilder $queryBuilder, int $page = 1, int $limit = 5): Pagerfanta
+	{
+
+		if (0 == $limit || 0 == $page) {
+			throw new \LogicException('"limit" and "page" query parameter must be greater than 0.');
+		}
+
+		$pager = new Pagerfanta(new QueryAdapter($queryBuilder));
+		$pager->setMaxPerPage((int) $limit);
+		$pager->setCurrentPage($page);
+
+		return $pager;
+	}
 }
