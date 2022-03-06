@@ -56,17 +56,21 @@ class CustomerController
      *     )
      * )
 	 *  @OA\Parameter(name="page",
-	 *    in="query",
+	 *    in="query", description="Specify the page you want to browse",
 	 *    @OA\Schema(type="int")
 	 *  ),
 	 *  @OA\Parameter(name="order",
-	 *    in="query",
+	 *    in="query", description="Specify sort order page 'asc' or 'desc'",
 	 *    @OA\Schema(type="string")
 	 *  ),
 	 *  @OA\Parameter(name="limit",
-	 *    in="query",
+	 *    in="query", description="Specify the number of items you want to display per page",
 	 *    @OA\Schema(type="int")
 	 *  )
+	 * @OA\Response(
+	 *     response = 404,
+	 *     description = "Page Not Found"
+	 * )
      * @OA\Tag(name="Customers")
      * @OASecurity(name="Bearer")
      * @return JsonResponse
